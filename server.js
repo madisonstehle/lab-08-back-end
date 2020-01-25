@@ -2,17 +2,20 @@
 
 require('dotenv').config();
 
-//Global variables for server.js
+// Global variables for server.js
 const express = require('express');
 const cors = require('cors');
 const superagent = require('superagent');
+const pg = require('pg');
 
 const PORT = process.env.PORT;
 const app = express();
 app.use(cors());
 
-//this is our grouping of .get's that will grab our information
+const client = new pg.Client(process.env.DATABASE_URL);
+client.on('error', err => console.error(err));
 
+//this is our grouping of .get's that will grab our information
 app.get('/', (request, response) => {
   response.send('This is our Home Page');
 });
@@ -30,15 +33,13 @@ app.get('/weather', weatherCallback);
 
 function locationCallback (request, response) {
   try{
-    // const geoData = require('./data/geo.json');
     const city = request.query.city;
     let key = process.env.GEOCODE_API_KEY;
     let url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json&limit=1`;
 
-    // const locationData = new Location(city, geoData);
     superagent.get(url)
       .then( data => {
-        const geoData = data.body[0]; //this is the first item
+        const geoData = data.body[0];
         const locationData = new Location(city, geoData);
         response.send(locationData);
       })
@@ -96,13 +97,13 @@ function weatherCallback(request, response) {
 //   this.description = event.description;
 //   this.start_time = event.start_time;
 //   this.end_time = event.end_time;
-
 // }
 
 function Weather(day) {
   this.forecast = day.summary;
   this.time = new Date(day.time * 1000).toString().slice(0,15);
 }
+
 // This is our location constructor function
 function Location(city, geoData){
   this.searchQuery = city;
