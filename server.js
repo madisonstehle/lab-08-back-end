@@ -117,4 +117,11 @@ function errorHandler(error, request, response) {
   response.status(500).send(error);
 }
 
-app.listen(PORT, () => console.log(`Server up on port ${PORT}`));
+client.connect()
+  .then( () => {
+    app.listen(PORT, () => {
+      console.log(`server up on ${PORT}`)
+    });
+  })
+
+// app.listen(PORT, () => console.log(`Server up on port ${PORT}`));
