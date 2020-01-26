@@ -1,4 +1,7 @@
 DROP TABLE IF EXISTS locations;
+-- DROP TABLE IF EXISTS weather;
+-- DROP TABLE IF EXISTS eventful;
+
 
 CREATE TABLE locations (
   id SERIAL PRIMARY KEY,
@@ -8,13 +11,13 @@ CREATE TABLE locations (
   longitude NUMERIC(10, 7)
 );
 
--- CREATE TABLE IF NOT EXISTS weather (
+-- CREATE TABLE weather (
 --   id SERIAL PRIMARY KEY,
 --   forecast VARCHAR(255), 
 --   time VARCHAR(255)
 -- );
 
--- CREATE TABLE IF NOT EXISTS eventful (
+-- CREATE TABLE eventful (
 --   id SERIAL PRIMARY KEY,
 --   link VARCHAR(255), 
 --   date VARCHAR(255),

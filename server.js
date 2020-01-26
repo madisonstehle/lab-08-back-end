@@ -26,33 +26,56 @@ app.get('/wrong', (request, response) => {
 
 //Callback functions for information
 app.get('/location', locationCallback);
-app.get('/weather', weatherCallback);
-// app.get('/events', eventsCallback);
-// app.get('/', );
-// app.get('/', );
+// app.get('/weather', weatherCallback);
 
+
+
+// sql callback
+app.get('/cityexplorer8', (request, response) => {
+  let SQL = `SELECT * FROM locations WHERE city=${city};`;
+  client.query(SQL)
+    .then(results => {
+      response.send(results.rows);
+    })
+    .catch(err => console.error(err));
+})
+
+
+// location callback
 function locationCallback (request, response) {
-  try{
-    const city = request.query.city;
-    let key = process.env.GEOCODE_API_KEY;
-    let url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json&limit=1`;
+  let city = request.query.city;
+  let SQL = `SELECT * FROM locations WHERE city='${city}';`;
 
-    superagent.get(url)
-      .then( data => {
-        const geoData = data.body[0];
-        const locationData = new Location(city, geoData);
-        response.send(locationData);
-      })
-      .catch( () => {
-        errorHandler('location broke', request, response);
-      });
+  client.query(SQL)
+    .then(results => {
+      if (results.rows.length > 0){
+        response.send(results.rows[0]);
+      } else {
+        try {
+          let key = process.env.GEOCODE_API_KEY;
+          let url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json&limit=1`;
 
-  }
-  catch(error){
-    errorHandler('Error 500! Something has gone wrong with the website server!', request, response);
-  }
+          superagent.get(url)
+            .then( data => {
+              const geoData = data.body[0];
+              const locationData = new Location(city, geoData);
+              let {search_query, formatted_query, latitude, longitude} = location;
+              let apiToSQL = `INSERT INTO locations (searchquery, formattedquery, latitude, longitude) VALUES ('${search_query}','${formatted_query}', '${latitude}', '${longitude}')`;
+              client.query(apiToSQL);
+              response.send(locationData);
+            })
+            .catch( () => {
+              errorHandler('location broke', request, response);
+            });
+        }
+        catch(error){
+          errorHandler('Error 500! Something has gone wrong with the website server!', request, response);
+        }
+      }
+    })
 }
 
+// weather callback
 function weatherCallback(request, response) {
   let key = process.env.WEATHER_API_KEY;
   let latitude = request.query.latitude;
@@ -62,7 +85,6 @@ function weatherCallback(request, response) {
   superagent.get(url)
     .then(data => {
       const forecastData = data.body.daily.data.map( obj => {
-        // new Weather(time, forecast);
         return new Weather(obj);
       });
       response.status(200).json(forecastData);
@@ -71,40 +93,14 @@ function weatherCallback(request, response) {
       errorHandler('Error 500! Something has gone wrong with the website server!', request, response);
     });
 }
-//Working with the events callback
-// function eventsCallback(request, response) {
-//   //Code here
-//   const city = request.query.city;
-//   let key = process.env.EVENTFUL_API_KEY;
-//   let url = `http://api.eventful.com/rest/events/search?${key}&keywords=books&location=${city}&date=Future`;
 
-//   superagent.get(url)
-//     .then(data => {
-//       const eventData = data.search.events.event.map( obj => {
-//         return new Events(obj);
-//       });
-//       response.status(200).json(eventData);
-//     })
-//     .catch(() => {
-//       errorHandler('Error 500! Something has gone wrong with the website server!', request, response);
-//     });
-// }
-
-// This is our weather constructor function
-// function Events(event) {
-//   this.title = event.title;
-//   this.url = event.url;
-//   this.description = event.description;
-//   this.start_time = event.start_time;
-//   this.end_time = event.end_time;
-// }
-
+// weather constructor
 function Weather(day) {
   this.forecast = day.summary;
   this.time = new Date(day.time * 1000).toString().slice(0,15);
 }
 
-// This is our location constructor function
+// location constructor
 function Location(city, geoData){
   this.searchQuery = city;
   this.formattedQuery = geoData.display_name;
@@ -112,16 +108,15 @@ function Location(city, geoData){
   this.longitude = geoData.lon;
 }
 
+// error handler
 function errorHandler(error, request, response) {
-
   response.status(500).send(error);
 }
 
+// server listener
 client.connect()
   .then( () => {
     app.listen(PORT, () => {
       console.log(`server up on ${PORT}`)
-    });
-  })
-
-// app.listen(PORT, () => console.log(`Server up on port ${PORT}`));
+    })
+  });
