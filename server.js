@@ -29,18 +29,6 @@ app.get('/location', locationCallback);
 // app.get('/weather', weatherCallback);
 
 
-
-// sql callback
-app.get('/cityexplorer8', (request, response) => {
-  let SQL = `SELECT * FROM locations WHERE city=${city};`;
-  client.query(SQL)
-    .then(results => {
-      response.send(results.rows);
-    })
-    .catch(err => console.error(err));
-})
-
-
 // location callback
 function locationCallback (request, response) {
   let city = request.query.city;
