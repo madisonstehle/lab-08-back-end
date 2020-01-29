@@ -46,11 +46,11 @@ function locationCallback (request, response) {
           superagent.get(url)
             .then( data => {
               const geoData = data.body[0];
-              const locationData = new Location(city, geoData);
+              const location = new Location(city, geoData);
               let {search_query, formatted_query, latitude, longitude} = location;
               let apiToSQL = `INSERT INTO locations (searchquery, formattedquery, latitude, longitude) VALUES ('${search_query}','${formatted_query}', '${latitude}', '${longitude}')`;
               client.query(apiToSQL);
-              response.send(locationData);
+              response.send(location);
             })
             .catch( () => {
               errorHandler('location broke', request, response);
