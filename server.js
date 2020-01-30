@@ -32,7 +32,7 @@ app.get('/location', locationCallback);
 // location callback
 function locationCallback (request, response) {
   let city = request.query.city;
-  let SQL = `SELECT * FROM locations WHERE city='${city}';`;
+  let SQL = `SELECT * FROM locations WHERE searchquery='${city}';`;
 
   client.query(SQL)
     .then(results => {
